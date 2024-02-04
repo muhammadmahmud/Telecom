@@ -1,0 +1,213 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">TELECOM</h1>
+    <h3>Phone Management System</h3>
+</div>
+
+<br />
+<br />
+
+<form id="btnAddNewPhoneNumberForm" method="post" onsubmit="return false;">
+    <div>
+        <div class="row">
+            <div class="col-md-2" style="font-weight:500">
+                Customer Name:
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="CustomerName">
+            </div>
+            <div class="col-md-2" style="font-weight:500">
+                Phone Number:
+            </div>
+            <div class="col-md-4">
+                <input type="number" class="form-control" id="PhoneNo">
+            </div>
+            <br /><br />
+            <div class="col-md-2" style="font-weight:500">
+                Is Active?:
+            </div>
+            <div class="col-md-4">
+                <select name="IsActive" id="IsActive">
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+        </div>
+        <br /><br />
+        <div class="row">
+            <div class="col">
+                <button type="button" onclick="return AddNewPhoneNumber()" class="btn btn-primary">Add New Phone Number</button>
+            </div>
+        </div>
+    </div>
+</form>
+<br />
+<br />
+
+<table class="table table-hover" id="tblPhoneNumbers">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Customer Name</th>
+            <th scope="col">Phone Number</th>
+            <th scope="col">Is Active?</th>
+            <th scope="col">Action</th>
+        </tr>
+    </thead>
+    <tbody id="tblBody">
+    </tbody>
+</table>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+<script>
+
+    $(document).ready(function () {
+
+        //$("#btnAddNewPhoneNumberForm").on('submit', function (e) {
+        //    debugger;
+        //    e.preventDefault();
+        //    var apiurl = "https://telecom.azurewebsites.net/api/Telecom/";
+        //    var data = {
+        //        Id: 1,
+        //        PhoneNo: 1,
+        //        CustomerName: "TEST1",
+        //        IsActive: true,
+        //        CreatedBy: "admin",
+        //        CreatedDate: "2024/02/02",
+        //        UpdatedBy: "admin",
+        //        UpdatedDate: "2024/02/02",
+        //    }
+        //    var testData = { CustomerName: $("#CustomerName").val().trim() }
+
+        //    $.ajax({
+        //        url: apiurl,
+        //        type: 'POST',
+        //        contentType: "application/json",
+        //        dataType: "html",
+        //        data: JSON.stringify(data),
+        //        success: function (d) {
+        //            alert("Saved Successfully");
+        //        },
+        //        error: function () {
+        //            alert(JSON.stringify(testData));
+        //            alert("Error please try again");
+        //        }
+        //    });
+        //});
+
+        GetDetails();
+    });
+
+    function GetDetails() {
+        var options = {};
+        options.url = "https://telecom.azurewebsites.net/api/Telecom";
+        options.type = "GET";
+        options.contentType = "application/json";
+        options.dataType = "html";
+
+        options.success = function (msg) {
+            $('#tblBody').html('');
+            if (msg !== undefined && msg !== null) {
+                const dt = JSON.parse(msg);
+                for (let i = 0; i < dt.length; i++) {
+                    var row = "<tr>";
+                    row += "<td> " + parseInt(i + 1) + "</td>";
+                    row += "<td> " + dt[i].customerName + "</td>"; row += "<td> " + dt[i].phoneNo + "</td>"; row += "<td> " + dt[i].isActive + "</td>";
+                    row += "<td> <button class='btn btn-primary'  onclick='return onEdit(" + dt[i].id + ")'>Edit</button>&nbsp;|&nbsp;<button class='btn btn - danger' onclick='return onDelete(" + dt[i].id + ")'>Delete</button> </td>";
+                    $('#tblBody').append(row);
+                }
+            }
+        },
+            options.error = function () {
+                console.log("Error while calling the Web API!");
+            };
+        $.ajax(options);
+    }
+    function AddNewPhoneNumber() {
+        var apiurl = "https://telecom.azurewebsites.net/api/Telecom/";
+        //var apiurl = "https://localhost:7063/api/Telecom/";
+        var values = {
+            //CustomerName: $("#CustomerName").val(),
+            //PhoneNo: $("#PhoneNo").val(),
+            //IsActive: $("#IsActive").val()
+            "values": { "CustomerName": $("#CustomerName").val(), "PhoneNo": $("#PhoneNo").val(), "IsActive": $("#IsActive").val() }
+        }
+        $.ajax({
+            url: apiurl,
+            type: 'POST',
+            contentType: "application/json",
+            dataType: "html",
+            data: JSON.stringify(values),
+            success: function (d) {
+                alert(JSON.stringify(values));
+                alert("Saved Successfully");
+            },
+            error: function () {
+                alert(JSON.stringify(values))
+                alert("Error please try again");
+            }
+        });
+    }
+
+
+    let ProductId = '';
+
+    function onEdit(id) {
+        ProductId = id;
+        var options = {};
+        options.url = "https://telecom.azurewebsites.net/api/Telecom/" + id;
+        options.type = "GET";
+        options.success = function (msg) {
+            console.log(msg);
+
+            var url = "/Home/Edit?Id=" + id;
+            window.location.href = url;
+
+            if (msg !== undefined && msg !== null) {
+                $("#txtName").val(msg.name);
+                $("#txtIsComplete").val(msg.iscomplete);
+            }
+        },
+            options.error = function () {
+                console.log("Error while calling the Web API!");
+            };
+        $.ajax(options);
+    }
+
+    function ActivatePhoneNumber() {
+        var options = {};
+        options.url = "https://telecom.azurewebsites.net/api/Telecom" + ProductId;
+        options.type = "POST";
+        var obj = {};
+        obj.Id = ProductId;
+        obj.Name = $("#txtName").val();
+        obj.IsComplete = $("#txtIsComplete").val();
+        options.data = JSON.stringify(obj);
+        options.contentType = "application/json";
+        options.dataType = "html";
+
+        options.success = function (msg) {
+            console.log(msg);
+
+            if (msg !== undefined && msg !== null) {
+                clear()
+                GetDetails();
+                alert('Record updated')
+            }
+        },
+            options.error = function () {
+                console.log("Error while calling the Web API!");
+            };
+        $.ajax(options);
+    }
+
+
+    function clear() {
+        $("#txtName").val('');
+        $("#txtIsComplete").val('');
+    }
+</script>
